@@ -7,6 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const PORT = configService.getOrThrow<number>('PORT');
+  app.startAllMicroservices();
   await app.listen(PORT, () => Logger.debug(`Gateway server is working`));
 }
 bootstrap();

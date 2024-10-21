@@ -9,22 +9,23 @@ import {
 
 @Module({
   controllers: [AuthController],
-  providers: [
-    {
-      provide: 'AUTH_SERVICE',
-      useFactory: (configService: ConfigService) => {
-        return ClientProxyFactory.create({
+  imports: [
+    ClientsModule.registerAsync([
+      {
+        name: 'AUTH_SERVICE',
+        useFactory: async (config: ConfigService) => ({
+          transport: Transport.RMQ,
           options: {
-            urls: [configService.getOrThrow('RABBITMQ_URL')],
-            queue: 'auth-queue',
+            urls: [config.getOrThrow<string>('RABBITMQ_URL')],
+            queue: 'auth_queue',
             queueOptions: {
               durable: true,
             },
           },
-        });
+        }),
+        inject: [ConfigService],
       },
-      inject: [ConfigService],
-    },
+    ]),
   ],
 })
 export class AuthModule {}
