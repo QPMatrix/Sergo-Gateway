@@ -6,36 +6,40 @@ WORKDIR /usr/src/app
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy only package.json and lockfile first to improve caching
-COPY package.json pnpm-lock.yaml ./
+# Copy only the gateway-server's package.json and lockfile first
+COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install -r
+# Copy the shared repo's package.json and lockfile
+COPY ./shared/package.json ./shared/pnpm-lock.yaml ./shared/
 
-# Copy the rest of the application code
-COPY . .
+# Install dependencies for both gateway-server and shared repo
+RUN pnpm install --recursive
 
-# Build the app
-RUN pnpm run build
+# Copy the entire source code for both the gateway-server and shared repo
+COPY ./gateway-server ./gateway-server
+COPY ./shared ./shared
 
+# Build both
+RUN pnpm --filter ./shared build
+RUN pnpm --filter ./gateway-server build
 
 # Production Stage
 FROM node:alpine AS production
 
+WORKDIR /usr/src/app
+
 # Set the environment to production
 ENV NODE_ENV=production
 
-WORKDIR /usr/src/app
-
-# Copy only what's needed for production
-COPY package.json pnpm-lock.yaml ./
+# Copy package.json and lockfile for installing only production dependencies
+COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./
+COPY ./shared/package.json ./shared/pnpm-lock.yaml ./shared/
 
 # Install only production dependencies
-RUN npm install -g pnpm
-RUN pnpm install --prod
+RUN pnpm install --prod --recursive
 
 # Copy the built app from the development stage
-COPY --from=development /usr/src/app/dist ./dist
+COPY --from=development /usr/src/app/gateway-server/dist ./gateway-server/dist
+COPY --from=development /usr/src/app/shared/dist ./shared/dist
 
-# Start the application
-CMD ["node", "dist/main"]
+CMD ["pnpm", "run", "start:prod"]

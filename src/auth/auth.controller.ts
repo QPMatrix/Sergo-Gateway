@@ -1,8 +1,6 @@
 import { Body, Controller, Get, Inject, Logger, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateUserDto } from './dto/create-user.dto';
-import { LoginDto } from './dto/login.dto';
-
+import { CreateUserDto, LoginDto } from '@sergo/shared/src/common';
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);

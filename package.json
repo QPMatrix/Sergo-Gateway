@@ -28,7 +28,8 @@
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.4",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "@sergo/shared": "file:../sergo-shared"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
