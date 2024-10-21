@@ -1,5 +1,7 @@
-import { Controller, Get, Inject, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Logger, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { CreateUserDto } from './dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,22 +12,26 @@ export class AuthController {
   ) {}
 
   @Get()
-  async getUser() {
-    this.logger.log('Sending request to get-user...');
-
+  async getUsers() {
     try {
-      const user = this.authClient.send('get-user', {
-        name: 'hasan',
-      });
+      const user = this.authClient.send('get.users', {});
 
-      this.logger.log(
-        `Received response from auth-service: ${JSON.stringify(user)}`,
-      );
       return user;
     } catch (error) {
       this.logger.error('Error occurred while fetching user:', error);
       console.log('Full Error Details:', error);
-      throw error; // Ensure we throw the error so it doesn't get swallowed.
+      throw error;
     }
+  }
+  @Post('/signup')
+  async signUp(@Body() data: CreateUserDto) {
+    const user = this.authClient.send('create.user', {
+      ...data,
+    });
+    return user;
+  }
+  @Post('/login')
+  async login(@Body() data: LoginDto) {
+    return this.authClient.send('auth.login', { ...data });
   }
 }
