@@ -6,40 +6,41 @@ WORKDIR /usr/src/app
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy only the gateway-server's package.json and lockfile first
-COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./
+# Copy package.json and lockfile for gateway-server
+COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./gateway-server/
 
-# Copy the shared repo's package.json and lockfile
-COPY ./shared/package.json ./shared/pnpm-lock.yaml ./shared/
+# Copy package.json and lockfile for sergo-shared
+COPY ./sergo-shared/package.json ./sergo-shared/pnpm-lock.yaml ./sergo-shared/
 
-# Install dependencies for both gateway-server and shared repo
+# Install dependencies
 RUN pnpm install --recursive
 
-# Copy the entire source code for both the gateway-server and shared repo
+# Copy source code
 COPY ./gateway-server ./gateway-server
-COPY ./shared ./shared
+COPY ./sergo-shared ./sergo-shared
 
-# Build both
-RUN pnpm --filter ./shared build
-RUN pnpm --filter ./gateway-server build
+# Build shared library first
+RUN pnpm --filter sergo-shared build
+
+# Build gateway-server
+RUN pnpm --filter gateway-server build
 
 # Production Stage
 FROM node:alpine AS production
 
 WORKDIR /usr/src/app
 
-# Set the environment to production
 ENV NODE_ENV=production
 
-# Copy package.json and lockfile for installing only production dependencies
-COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./
-COPY ./shared/package.json ./shared/pnpm-lock.yaml ./shared/
+# Copy package.json and lockfile for production dependencies
+COPY ./gateway-server/package.json ./gateway-server/pnpm-lock.yaml ./gateway-server/
+COPY ./sergo-shared/package.json ./sergo-shared/pnpm-lock.yaml ./sergo-shared/
 
-# Install only production dependencies
+# Install production dependencies
 RUN pnpm install --prod --recursive
 
-# Copy the built app from the development stage
+# Copy built code from development stage
 COPY --from=development /usr/src/app/gateway-server/dist ./gateway-server/dist
-COPY --from=development /usr/src/app/shared/dist ./shared/dist
+COPY --from=development /usr/src/app/sergo-shared/dist ./sergo-shared/dist
 
 CMD ["pnpm", "run", "start:prod"]

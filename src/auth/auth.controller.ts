@@ -1,13 +1,12 @@
 import { Body, Controller, Get, Inject, Logger, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateUserDto, LoginDto } from '@sergo/shared/src/common';
+import { CreateUserDto, LoginDto } from '@sergo/shared';
+import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
-  ) {}
+  constructor(@Inject(AUTH_SERVICE) private readonly authClient: ClientProxy) {}
 
   @Get()
   async getUsers() {
@@ -17,7 +16,6 @@ export class AuthController {
       return user;
     } catch (error) {
       this.logger.error('Error occurred while fetching user:', error);
-      console.log('Full Error Details:', error);
       throw error;
     }
   }
@@ -30,6 +28,7 @@ export class AuthController {
   }
   @Post('/login')
   async login(@Body() data: LoginDto) {
-    return this.authClient.send('auth.login', { ...data });
+    const response = this.authClient.send('auth.local.login', { ...data });
+    return response;
   }
 }
