@@ -2,10 +2,9 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { TokenPayload } from '@sergo/shared/interfaces/token-payload';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { AUTH_SERVICE, USERS } from '@sergo/shared/constants/index';
+import { AUTH_SERVICE, USERS, TokenPayload } from '@sergo/shared';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

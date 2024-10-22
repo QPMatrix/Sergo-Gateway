@@ -4,8 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
-import { AUTH_SERVICE } from '@sergo/shared/constants/services';
-import { TokenPayload } from '@sergo/shared/interfaces/token-payload';
+import { AUTH_SERVICE, TokenPayload } from '@sergo/shared';
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,

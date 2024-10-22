@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PassportStrategy } from '@nestjs/passport';
-import { AUTH_SERVICE, AUTH } from '@sergo/shared/constants/index';
+import { AUTH_SERVICE, AUTH } from '@sergo/shared';
 import { Strategy } from 'passport-local';
 import { lastValueFrom } from 'rxjs';
 
