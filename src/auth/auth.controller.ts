@@ -1,22 +1,28 @@
 import {
   Body,
   Controller,
-  Get,
+  Post,
   Inject,
   Logger,
-  Post,
   Res,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateUserDto } from '@sergo/shared/dtos/index';
-import { AUTH_SERVICE, USERS, AUTH } from '@sergo/shared/constants/index';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { AuthResponse } from './response/auth.response';
-import { lastValueFrom } from 'rxjs';
-import { CurrentUser } from '@sergo/shared/decorator/index';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
+import {
+  UserWithRolesAndVerify,
+  CurrentUser,
+  AUTH_SERVICE,
+  USERS,
+  CreateUserDto,
+} from '@sergo/shared';
+import { lastValueFrom } from 'rxjs';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtRefreshAuthGuard } from 'src/guards/jwt-refresh-auth.guard';
+
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -28,34 +34,32 @@ export class AuthController {
 
   @Post('/signup')
   async signUp(@Body() data: CreateUserDto) {
-    const user = this.authClient.send(USERS.CREATE_USER, {
-      ...data,
-    });
-    return user;
+    try {
+      const user = await lastValueFrom(
+        this.authClient.send(USERS.CREATE_USER, { ...data }),
+      );
+      return user;
+    } catch (error) {
+      this.logger.error('Error during signup', error);
+      throw error;
+    }
   }
+
   @Post('/login')
   @UseGuards(LocalAuthGuard)
   async login(
-    @CurrentUser() user: any,
+    @CurrentUser() user: UserWithRolesAndVerify,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const authResponse: AuthResponse = await lastValueFrom(
-      this.authClient.send(AUTH.LOCAL_LOGIN, { ...user }),
-    );
-    await this.authService.generateCookies(
-      authResponse.access_expire,
-      authResponse.refresh_expire,
-      authResponse.access_token,
-      authResponse.refresh_token,
-      res,
-    );
-    return {
-      access_token: authResponse.access_token,
-      refresh_token: authResponse.refresh_token,
-    };
+    return this.authService.handleAuthResponse(user, res);
   }
-  @Get('authenticate')
-  me(@CurrentUser() user: any) {
-    return user;
+
+  @Post('/refresh_token')
+  @UseGuards(JwtRefreshAuthGuard)
+  async refreshToken(
+    @CurrentUser() user: UserWithRolesAndVerify,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.handleAuthResponse(user, res);
   }
 }
