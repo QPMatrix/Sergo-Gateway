@@ -9,14 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateUserDto, LoginDto } from '@sergo/shared';
-import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
-import { AUTH, USERS } from '@sergo/shared/dist/constants/patterns';
+import { CreateUserDto } from '@sergo/shared/dtos/index';
+import { AUTH_SERVICE, USERS, AUTH } from '@sergo/shared/constants/index';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthResponse } from './response/auth.response';
 import { lastValueFrom } from 'rxjs';
-import { CurrentUser } from '@sergo/shared/dist/decorator';
+import { CurrentUser } from '@sergo/shared/decorator/index';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 @Controller('auth')
 export class AuthController {
@@ -37,11 +36,11 @@ export class AuthController {
   @Post('/login')
   @UseGuards(LocalAuthGuard)
   async login(
-    @Body() data: LoginDto,
+    @CurrentUser() user: any,
     @Res({ passthrough: true }) res: Response,
   ) {
     const authResponse: AuthResponse = await lastValueFrom(
-      this.authClient.send(AUTH.LOCAL_LOGIN, data),
+      this.authClient.send(AUTH.LOCAL_LOGIN, { ...user }),
     );
     await this.authService.generateCookies(
       authResponse.access_expire,

@@ -42,7 +42,6 @@
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.2.2",
     "@nestjs/testing": "^10.0.0",
-    "@sergo/shared": "file:../sergo-shared",
     "@types/cookie-parser": "^1.4.7",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",

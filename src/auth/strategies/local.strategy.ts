@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PassportStrategy } from '@nestjs/passport';
-import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
-import { AUTH } from '@sergo/shared/dist/constants/patterns';
+import { AUTH_SERVICE, AUTH } from '@sergo/shared/constants/index';
 import { Strategy } from 'passport-local';
 import { lastValueFrom } from 'rxjs';
 
@@ -15,7 +14,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
   async validate(identifier: string, password: string) {
     const user = lastValueFrom(
-      this.authClient.send(AUTH.LOCAL_LOGIN, {
+      this.authClient.send(AUTH.VALIDATE_USER, {
         identifier,
         password,
       }),
