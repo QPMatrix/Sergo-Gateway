@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
+import { AuthService } from './auth.service';
 
 @Module({
   controllers: [AuthController],
@@ -24,5 +25,6 @@ import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
       },
     ]),
   ],
+  providers: [AuthService],
 })
 export class AuthModule {}
