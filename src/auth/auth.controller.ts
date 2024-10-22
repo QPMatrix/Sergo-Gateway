@@ -6,7 +6,8 @@ import {
   Logger,
   Res,
   UseGuards,
-  Req,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Response } from 'express';
@@ -20,8 +21,7 @@ import {
   CreateUserDto,
 } from '@sergo/shared';
 import { lastValueFrom } from 'rxjs';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtRefreshAuthGuard } from 'src/guards/jwt-refresh-auth.guard';
+import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -31,7 +31,7 @@ export class AuthController {
     @Inject(AUTH_SERVICE) private readonly authClient: ClientProxy,
     private readonly authService: AuthService,
   ) {}
-
+  @HttpCode(HttpStatus.CREATED)
   @Post('/signup')
   async signUp(@Body() data: CreateUserDto) {
     try {
@@ -44,7 +44,7 @@ export class AuthController {
       throw error;
     }
   }
-
+  @HttpCode(HttpStatus.OK)
   @Post('/login')
   @UseGuards(LocalAuthGuard)
   async login(
@@ -53,7 +53,7 @@ export class AuthController {
   ) {
     return this.authService.handleAuthResponse(user, res);
   }
-
+  @HttpCode(HttpStatus.OK)
   @Post('/refresh_token')
   @UseGuards(JwtRefreshAuthGuard)
   async refreshToken(

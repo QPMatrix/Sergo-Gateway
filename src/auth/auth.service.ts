@@ -41,16 +41,22 @@ export class AuthService {
   async handleAuthResponse(
     user: UserWithRolesAndVerify,
     res: Response,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  ): Promise<{
+    access_token: string;
+    refresh_token: string;
+    user: UserWithRolesAndVerify;
+  }> {
     try {
       const authResponse: AuthResponse = await lastValueFrom(
         this.authClient.send(AUTH.LOCAL_LOGIN, { ...user }),
       );
+      console.log(authResponse);
       await this.setAuthCookies(authResponse, res);
 
       return {
         access_token: authResponse.access_token,
         refresh_token: authResponse.refresh_token,
+        user: { ...authResponse.user },
       };
     } catch (error) {
       this.logger.error('Error during authentication process', error);
