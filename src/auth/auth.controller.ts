@@ -5,18 +5,19 @@ import {
   Inject,
   Logger,
   Post,
-  Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
-import { ClientProxy, Ctx, RmqContext } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { CreateUserDto, LoginDto } from '@sergo/shared';
 import { AUTH_SERVICE } from '@sergo/shared/dist/constants';
 import { AUTH, USERS } from '@sergo/shared/dist/constants/patterns';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthResponse } from './response/auth.response';
 import { lastValueFrom } from 'rxjs';
 import { CurrentUser } from '@sergo/shared/dist/decorator';
+import { LocalAuthGuard } from '../guards/local-auth.guard';
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -26,17 +27,6 @@ export class AuthController {
     private readonly authService: AuthService,
   ) {}
 
-  @Get()
-  async getUsers() {
-    try {
-      const user = this.authClient.send(USERS.GET_ALL_USERS, {});
-
-      return user;
-    } catch (error) {
-      this.logger.error('Error occurred while fetching user:', error);
-      throw error;
-    }
-  }
   @Post('/signup')
   async signUp(@Body() data: CreateUserDto) {
     const user = this.authClient.send(USERS.CREATE_USER, {
@@ -45,12 +35,13 @@ export class AuthController {
     return user;
   }
   @Post('/login')
+  @UseGuards(LocalAuthGuard)
   async login(
     @Body() data: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const authResponse: AuthResponse = await lastValueFrom(
-      this.authClient.send<AuthResponse>(AUTH.LOCAL_LOGIN, data),
+      this.authClient.send(AUTH.LOCAL_LOGIN, data),
     );
     await this.authService.generateCookies(
       authResponse.access_expire,
@@ -65,9 +56,7 @@ export class AuthController {
     };
   }
   @Get('authenticate')
-  me(@Ctx() ctx: RmqContext) {
-    console.log(ctx);
-    //@ts-ignore
-    return ctx.user;
+  me(@CurrentUser() user: any) {
+    return user;
   }
 }
